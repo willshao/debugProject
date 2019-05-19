@@ -135,9 +135,15 @@ def main():
     # print command line arguments
     _f1path=''
     _f2path=''
+    
     for arg in sys.argv[1:]:
-        _f1path=getParamter(arg,'f1path')
-        _f2path=getParamter(arg,'f2path')
+        para_name=arg.split('=')
+        print(para_name)
+        if("f1path"==para_name[0]):
+            _f1path=para_name[1]
+        if("f2path"==para_name[0]):
+            _f2path=para_name[1]
+    print(exportfilepath)
     AnalyzeLogs(_f1path,_f2path)
 if __name__ == "__main__":
     main()

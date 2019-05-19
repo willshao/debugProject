@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>331937d3-2859-48e2-9f56-f6eda4bef0c1</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>AnalyzeLogs.py</StartupFile>
+    <StartupFile>testreadcsv.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -27,11 +27,17 @@
     <Compile Include="CompareCSVfile.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ExportData.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="FormatDumpObject.py" />
     <Compile Include="pythonwithparamtest.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="registery_py.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="testreadcsv.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

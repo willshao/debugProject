@@ -119,7 +119,7 @@ def AnalyzeLogs(f1,f2):
         ExportDictToCSV(f1+'_same_comp_dict.csv',d_c2,_columeName=['object','d1_size','d2_size','d1_count','d2_count','size_increase','count_increase','max_size_increase','max_addressfrom_d1','max_addressfrom_d2'])
     else:
         dict1=exportCSVFile(f1)
-AnalyzeLogs('D:/WillCaseShare/problem/ambor/48.txt','D:/WillCaseShare/problem/ambor/10.txt')
+#AnalyzeLogs('D:/WillCaseShare/problem/ambor/48.txt','D:/WillCaseShare/problem/ambor/10.txt')
 #AnalyzeLogs('D:/WillCaseShare/119041526000221-OOM/log/gen2.log','')
 
 

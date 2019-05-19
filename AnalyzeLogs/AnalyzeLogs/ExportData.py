@@ -1,4 +1,4 @@
-#step 2 formatic the heap object inforamtion 
+#step 2 export to CSV function module
 import os
 import sys
 import csv
@@ -6,14 +6,6 @@ from pykd import *
 _columeName=['object','size','count','max_size','max_address']
 _columeName2=['object','size','address']
 
-paras={}
-def readcsvtoDict(filePath):
-    f_data=[]
-    with open(filePath) as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            f_data.append(row)
-    return f_data
 
 def ExportDictToCSV(filename,dictlist,columeName):    
     with open(filename, 'w') as f1:
@@ -30,47 +22,17 @@ def ExportListToCSV(filename,list,columeName):
         for values in list:
             writer.writerow(values)
 
-def findGCRootDict(dict):
-    stacklist=[]
-    for k,v in dict.items():
-            stack=pykd.dbgCommand("!gcroot {}".format(v["address"]))
-            stacklist.append[stack]
-    return stacklist
-
-def findGCRootlist(list):
-    stacklist=[]
-    for k in list:
-            stack=pykd.dbgCommand("!gcroot {}".format(k["address"]))
-            stacklist.append[stack]
-    return stacklist
-
-def most_frequent(List): 
-    counter = 0
-    num = List[0]       
-    for i in List: 
-        curr_frequency = List.count(i) 
-        if(curr_frequency> counter): 
-            counter = curr_frequency 
-            num = i   
-    return num 
-
-def getParamter(para,paraname):
-    para_name=para.split('=')
-    print(para_name)
-    if(paraname==para_name[0]):
-        return para_name[1]
-    
 
 def getObjects(exportpath,allfilepath):
     step=0
     picked=1000
     b=pykd.dbgCommand("!mex.feo -gen 2 -skip {} -first {}".format(step,picked))
+    
     array = []
     dictlist={}
     objectInfoList={}
-    needcheckedList=[]
-    while(len(b.split("\n"))>2):
-        
+    needcheckedList=[] 
+    while(len(b.split("\n"))>1):
         for line in b.split("\n"):
             if(line.startswith('0:')==False and line.startswith('Open')==False and line.endswith('objects found.\n')==False):
                 _con=line.rstrip('\n').split();
@@ -94,6 +56,7 @@ def getObjects(exportpath,allfilepath):
         step=step+1000
         print(step)
         b=pykd.dbgCommand("!mex.feo -gen 2 -skip {} -first {}".format(step,picked))
+    
     itemList =sorted(dictlist.values(), key=lambda x: (x['count'], x['size']),reverse=True)
     addresslistall=[]
     for obj in itemList[:60]:
@@ -119,60 +82,16 @@ def getObjects(exportpath,allfilepath):
         ExportDictToCSV(exportpath+'_all_data.csv',dictlist,_columeName)
         ExportListToCSV(exportpath+'_key_data.csv',addresslistall,_columeName2)
         print("End Export")  
-    key_f1_list=[]
-    if(allfilepath!=''):
-        print("Start compare....")  
-        key_f1_list=readcsvtoDict(allfilepath+'_key_data.csv')
-        set1 = set((str(x["address"]),str(x["object"]),int(x["size"])) for x in addresslistall)
-        set2 = set((str(x["address"]),str(x["object"]),int(x["size"])) for x in key_f1_list)
-        add=[ x for x in key_f1_list if (str(x["address"]),str(x["object"]),int(x["size"])) not in set1 ]
-        same=[ x for x in key_f1_list if (str(x["address"]),str(x["object"]),int(x["size"])) in set1 ]
-        reduce=[ x for x in addresslistall if (str(x["address"]),str(x["object"]),int(x["size"])) not in set2 ]
-        print("Existed two dumps")
-        print('\n'.join(map(str, same)))
-        print("New dumps objects")
-        print('\n'.join(map(str, add)))
-        print("Old dumps objects")
-        print('\n'.join(map(str, reduce)))
-    all_f1_list=[] 
-    summary_dict={}
-    if(allfilepath!=''):
-        key_f1_list=readcsvtoDict(allfilepath+'_all_data.csv')
-        
-        for key1 in key_f1_list:
-            if(dictlist[key1["object"]]):
-                compare_size=int(key1['size'])-int(dictlist[key1["object"]]['size'])
-                compare_count=int(key1['count'])-int(dictlist[key1["object"]]['count'])
-                compare_max_size=int(key1['max_size'])-int(dictlist[key1["object"]]['max_size'])                
-                summary_dict[key1["object"]]={'object':key1["object"],'d1_size':dictlist[key1["object"]]['size'],'d2_size':key1['size'],'d1_count':dictlist[key1["object"]]['count'],'d2_count':key1['count'],'size_increase':compare_size,'count_increase':compare_count,'max_size_increase':compare_max_size,'max_addressfrom_d1':dictlist[key1["object"]]['max_address'],'max_addressfrom_d2':key1['max_address']}
-        summary_dict =sorted(summary_dict.values(), key=lambda x: (x['count_increase'], x['size_increase']),reverse=True)
-        print(summary_dict)
-        print("End compare....") 
-    print("High Stacks!")
-    if(add):
-        addstack=findGCRootlist(add)
-        if(addstack):
-            print(most_frequent(addstack))
-    if(same):
-        samestack=findGCRootlist(same)
-        if(samestack):
-            print(most_frequent(addstack))
-
-
 
 def main():
     exportfilepath=''
     fallpath=''
-    _f2path=''
     for arg in sys.argv[1:]:
         para_name=arg.split('=')
         if("exportpath"==para_name[0]):
             exportfilepath=para_name[1]
-        
         if("fpath"==para_name[0]):
             fallpath=para_name[1]       
     getObjects(exportfilepath,fallpath)
-
-
 if __name__ == "__main__":
     main()
