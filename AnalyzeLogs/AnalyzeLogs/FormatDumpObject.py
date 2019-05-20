@@ -33,15 +33,17 @@ def ExportListToCSV(filename,list,columeName):
 def findGCRootDict(dict):
     stacklist=[]
     for k,v in dict.items():
-            stack=pykd.dbgCommand("!gcroot {}".format(v["address"]))
-            stacklist.append[stack]
+        stack=pykd.dbgCommand("!gcroot {}".format(str(v['address'])))
+        stacklist.append(stack)
     return stacklist
-
+def findGCRootaddress(address):    
+        stack=pykd.dbgCommand("!gcroot {}".format(str(address)))
+        return stack;   
 def findGCRootlist(list):
     stacklist=[]
     for k in list:
-            stack=pykd.dbgCommand("!gcroot {}".format(k["address"]))
-            stacklist.append[stack]
+        stack=pykd.dbgCommand("!gcroot {}".format(str(['address'])))
+        stacklist.append(stack)
     return stacklist
 
 def most_frequent(List): 
@@ -63,7 +65,7 @@ def getParamter(para,paraname):
 
 def getObjects(exportpath,allfilepath):
     step=0
-    picked=1000
+    picked=5000
     b=pykd.dbgCommand("!mex.feo -gen 2 -skip {} -first {}".format(step,picked))
     array = []
     dictlist={}
@@ -91,8 +93,10 @@ def getObjects(exportpath,allfilepath):
                     dictlist[_con[2]]={'object':_con[2],'size':int(_con[1]),'count':1,'max_size':int(_con[1]),'max_address':_con[0]}
                     objectInfoList.setdefault(_con[2], []);
                     objectInfoList[_con[2]].append({'object':_con[2],'size':int(_con[1]),'address':_con[0]})
-        step=step+1000
-        print(step)
+        step=step+5000
+        
+        #print("export count:{} step".format(step))
+        #print("handled count:{}".format(len(objectInfoList)))
         b=pykd.dbgCommand("!mex.feo -gen 2 -skip {} -first {}".format(step,picked))
     itemList =sorted(dictlist.values(), key=lambda x: (x['count'], x['size']),reverse=True)
     addresslistall=[]
@@ -109,56 +113,69 @@ def getObjects(exportpath,allfilepath):
             addresslist=objectInfoList[obj['object']];
             addresslist=sorted(addresslist, key=lambda x: x['size'],reverse=True)
             addresslistall.extend(addresslist)
-            if(len(addresslist)>40):
-                print('\n'.join(map(str, addresslist[:40])))
+            if(len(addresslist)>60):
+                print('\n'.join(map(str, addresslist[:20])))
             else:
                 print('\n'.join(map(str, addresslist)))
      
     if(exportpath!=''):
-        print("Start Export....")  
+        print("================Start Export....")  
         ExportDictToCSV(exportpath+'_all_data.csv',dictlist,_columeName)
         ExportListToCSV(exportpath+'_key_data.csv',addresslistall,_columeName2)
-        print("End Export")  
+        print("================End Export")  
     key_f1_list=[]
-    if(allfilepath!=''):
-        print("Start compare....")  
-        key_f1_list=readcsvtoDict(allfilepath+'_key_data.csv')
-        set1 = set((str(x["address"]),str(x["object"]),int(x["size"])) for x in addresslistall)
-        set2 = set((str(x["address"]),str(x["object"]),int(x["size"])) for x in key_f1_list)
-        add=[ x for x in key_f1_list if (str(x["address"]),str(x["object"]),int(x["size"])) not in set1 ]
-        same=[ x for x in key_f1_list if (str(x["address"]),str(x["object"]),int(x["size"])) in set1 ]
-        reduce=[ x for x in addresslistall if (str(x["address"]),str(x["object"]),int(x["size"])) not in set2 ]
-        print("Existed two dumps")
-        print('\n'.join(map(str, same)))
-        print("New dumps objects")
-        print('\n'.join(map(str, add)))
-        print("Old dumps objects")
-        print('\n'.join(map(str, reduce)))
+    add=[]
+    same=[]
+    reduce=[]
+    
     all_f1_list=[] 
     summary_dict={}
     if(allfilepath!=''):
         key_f1_list=readcsvtoDict(allfilepath+'_all_data.csv')
         
         for key1 in key_f1_list:
-            if(dictlist[key1["object"]]):
+            if(dictlist.get(key1['object'])):
                 compare_size=int(key1['size'])-int(dictlist[key1["object"]]['size'])
                 compare_count=int(key1['count'])-int(dictlist[key1["object"]]['count'])
                 compare_max_size=int(key1['max_size'])-int(dictlist[key1["object"]]['max_size'])                
                 summary_dict[key1["object"]]={'object':key1["object"],'d1_size':dictlist[key1["object"]]['size'],'d2_size':key1['size'],'d1_count':dictlist[key1["object"]]['count'],'d2_count':key1['count'],'size_increase':compare_size,'count_increase':compare_count,'max_size_increase':compare_max_size,'max_addressfrom_d1':dictlist[key1["object"]]['max_address'],'max_addressfrom_d2':key1['max_address']}
         summary_dict =sorted(summary_dict.values(), key=lambda x: (x['count_increase'], x['size_increase']),reverse=True)
-        print(summary_dict)
-        print("End compare....") 
-    print("High Stacks!")
-    if(add):
-        addstack=findGCRootlist(add)
-        if(addstack):
-            print(most_frequent(addstack))
-    if(same):
-        samestack=findGCRootlist(same)
-        if(samestack):
-            print(most_frequent(addstack))
+        #print(summary_dict)
+        for v in summary_dict:
+            print("object name:  {} |increse Count:  {} |Incease Size:  {} | Address_d1:    {} | address_d2: {}".format(v['object'],v['count_increase'], v['size_increase'],v['max_addressfrom_d1'],v['max_addressfrom_d2']))
+        print("================End compare....")
+    if(allfilepath!=''):
+        print("================Start compare....")  
+        key_f1_list=readcsvtoDict(allfilepath+'_key_data.csv')
+        set1 = set((str(x["address"]),str(x["object"]),int(x["size"])) for x in addresslistall)
+        set2 = set((str(x["address"]),str(x["object"]),int(x["size"])) for x in key_f1_list)
+        add=[ x for x in key_f1_list if (str(x["address"]),str(x["object"]),int(x["size"])) not in set1 ]
+        same=[ x for x in key_f1_list if (str(x["address"]),str(x["object"]),int(x["size"])) in set1 ]
+        reduce=[ x for x in addresslistall if (str(x["address"]),str(x["object"]),int(x["size"])) not in set2 ]
+        print("================Existed two dumps================")
+        print('\n'.join(map(str, same)))
+        print("================New dumps objects================")
+        print('\n'.join(map(str, add)))
+        print("================Old dumps objects================")
+        print('\n'.join(map(str, reduce)))
+        print("================Key Stacks======================")
+        
+        if(add):
+            addstack=findGCRootlist(add)
+            if(addstack):
+                print(most_frequent(addstack))
+        if(same):
+            samestack=findGCRootlist(same)
+            if(samestack):
+                print(most_frequent(addstack))
 
-
+        #test function
+        #stack=findGCRootaddress('0275b0f4')
+        #print(stack)
+        #print('---------------')
+        #stack=findGCRootaddress('032353a8')
+        #print(stack)
+        
 
 def main():
     exportfilepath=''

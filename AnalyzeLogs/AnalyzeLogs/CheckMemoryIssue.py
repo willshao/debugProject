@@ -53,7 +53,7 @@ def GetPerformanceCounter():
             print("Gen2 GC ratio high, please check LOH and Pined Object. THe Application may have memory leak issue")
         if(gc1_heap_ratio<=1 and gc0_heap_ratio<10):
             print("Please focus on Gen 2 , application memory leak!")
-        if(_LOH_h_size_ratio<0.2):
+        if(_LOH_h_size_ratio>0.7):
             print("Please focus on LOH, application memory leak!")
     else:
         result2=pykd.dbgCommand("!mex.gcheapinfo ")
@@ -76,7 +76,7 @@ def GetPerformanceCounter():
                 print("==============Debuging Suggestion================")
                 if(gc1_heap_ratio<=1 and gc0_heap_ratio<10):
                     print("Please focus on Gen 2, application memory leak!")
-                if(_LOH_h_size_ratio<0.2):
+                if(_LOH_h_size_ratio>0.7):
                     print("Please focus on LOH, application memory leak!")
                 #if(_GC_Time_Ratio1<2):
                  #   print("Gen2 GC ratio high, please check LOH and Pined Object. THe Application may have memory leak issue")
